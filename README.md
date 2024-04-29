@@ -11,5 +11,6 @@ wget https://raw.githubusercontent.com/RocketChat/Docker.Official.Image/master/6
 docker build -t softinator:chat .
 wget https://raw.githubusercontent.com/RocketChat/Docker.Official.Image/master/compose.yml 
 #change image name
-yarn
-yarn dsv
+docker compose up -d
+#yarn
+#yarn dsv
