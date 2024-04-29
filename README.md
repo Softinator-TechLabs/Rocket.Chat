@@ -7,5 +7,9 @@ cd Rocket.Chat
 git checkout 6.7.1
 sudo su
 export METEOR_ALLOW_SUPERUSER=true
+wget https://raw.githubusercontent.com/RocketChat/Docker.Official.Image/master/6.7/Dockerfile
+docker build -t softinator:chat .
+wget https://raw.githubusercontent.com/RocketChat/Docker.Official.Image/master/compose.yml 
+#change image name
 yarn
 yarn dsv
