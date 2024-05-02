@@ -1,4 +1,3 @@
-"imported-csv-group","billy.bob","private",""
-"imported-csv-channel","billy.bob","public",""
-"imported-csv-with-members-group","billy.bob","private","billy.bob;billy.joe"
-"imported-csv-with-members-channel","billy.bob","public","billy.bob;billy.joe"
+version https://git-lfs.github.com/spec/v1
+oid sha256:00aec6acbff4a00421779066a2dc60804b2f141181cad2b65c3a32ac22b89f11
+size 250

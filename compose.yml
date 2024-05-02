@@ -3,7 +3,7 @@ volumes:
 
 services:
   rocketchat:
-    image: softinator:chat
+    image: rocketchat:latest
     restart: always
     labels:
       traefik.enable: "true"
