@@ -3,7 +3,7 @@ volumes:
 
 services:
   rocketchat:
-    image: rocketchat:latest
+    image: "satyamv/rocket.chat:${TAG}"
     restart: always
     labels:
       traefik.enable: "true"
