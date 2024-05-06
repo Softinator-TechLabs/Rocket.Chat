@@ -1,9 +1,23 @@
 pipeline {
-    agent any
-
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-satyam')
-        DOCKER_IMAGE_NAME = "satyamv/rocket.chat"
+    agent {
+        kubernetes {
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: kaniko
+                image: gcr.io/kaniko-project/executor:latest
+                args: ["--dockerfile=/workspace/Dockerfile", "--context=dir:///workspace/", "--destination=satyamv/rocket.chat:${env.BUILD_NUMBER}"]
+                volumeMounts:
+                - name: kaniko-secret
+                  mountPath: /kaniko/.docker
+              volumes:
+              - name: kaniko-secret
+                secret:
+                  secretName: dockerhub-satyam
+            """
+        }
     }
 
     stages {
@@ -13,26 +27,10 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image with Kaniko') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}")
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            when {
-                expression {
-                    return env.DOCKERHUB_CREDENTIALS
-                }
-            }
-            steps {
-                script {
-                    docker.withRegistry('', DOCKERHUB_CREDENTIALS) {
-                        def image = docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}")
-                        image.push()
-                    }
+                container('kaniko') {
+                    sh '/kaniko/executor'
                 }
             }
         }
@@ -40,7 +38,6 @@ pipeline {
         stage('Update Compose File') {
             steps {
                 script {
-                    // Update the docker-compose.yml file
                     def composeFile = readFile('docker-compose.yml')
                     composeFile = composeFile.replaceAll(/\$\{TAG\}/, "${env.BUILD_NUMBER}")
                     writeFile file: 'docker-compose.yml', text: composeFile
@@ -51,7 +48,6 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 script {
-                    // Deploy the Docker image using Docker Compose
                     sh 'docker-compose up -d --build'
                 }
             }
