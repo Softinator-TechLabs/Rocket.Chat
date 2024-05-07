@@ -1,46 +1,34 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: kaniko
-                image: gcr.io/kaniko-project/executor:latest
-                args: ["--dockerfile=/workspace/Dockerfile", "--context=dir:///workspace/", "--destination=satyamv/rocket.chat:${env.BUILD_NUMBER}"]
-                volumeMounts:
-                - name: kaniko-secret
-                  mountPath: /kaniko/.docker
-              volumes:
-              - name: kaniko-secret
-                secret:
-                  secretName: dockerhub-satyam
-            """
-        }
+    agent any
+
+    environment {
+        DOCKER_CREDENTIALS = 'dockerhub-satyam'
+        DOCKER_IMAGE = 'satyamv/custom'
+        DOCKER_TAG = 'latest'
+        DEPLOY_BRANCH = 'custom' // Change this to the desired branch
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: "${DEPLOY_BRANCH}", url: 'https://github.com/Softinator-TechLabs/Rocket.Chat.git'
             }
         }
 
-        stage('Build Docker Image with Kaniko') {
+        stage('Build Docker Image') {
             steps {
-                container('kaniko') {
-                    sh '/kaniko/executor'
+                script {
+                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
                 }
             }
         }
 
-        stage('Update Compose File') {
+        stage('Push Docker Image') {
             steps {
                 script {
-                    def composeFile = readFile('docker-compose.yml')
-                    composeFile = composeFile.replaceAll(/\$\{TAG\}/, "${env.BUILD_NUMBER}")
-                    writeFile file: 'docker-compose.yml', text: composeFile
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
+                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                    }
                 }
             }
         }
@@ -48,16 +36,11 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 script {
+                    // Ensure Docker Compose is installed on the host
+                    sh 'docker-compose down || true'
                     sh 'docker-compose up -d --build'
                 }
             }
         }
     }
-
-    post {
-        always {
-            cleanWs()
-        }
-    }
 }
-
