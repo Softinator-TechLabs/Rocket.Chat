@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'maven:3.8.1-jdk-11'
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // Map Docker socket for Docker inside Docker
+        }
+    }
 
     environment {
         DOCKER_CREDENTIALS = 'dockerhub-satyam'
@@ -14,15 +19,11 @@ pipeline {
                 git branch: "${DEPLOY_BRANCH}", url: 'https://github.com/Softinator-TechLabs/Rocket.Chat.git'
             }
         }
-	stage('Install Docker CLI') {
-    	    steps {
-                sh 'apt-get update && apt-get install -y docker.io'
-            }
-        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                 }
             }
         }
@@ -30,8 +31,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
-                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
                     }
                 }
             }
@@ -40,7 +42,6 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 script {
-                    // Ensure Docker Compose is installed on the host
                     sh 'docker-compose down || true'
                     sh 'docker-compose up -d --build'
                 }
