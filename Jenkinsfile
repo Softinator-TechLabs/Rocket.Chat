@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-	label 'docker-agent'
-	}
+     agent any
 
     environment {
         DOCKER_CREDENTIALS = 'dockerhub-satyam'
@@ -14,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${DEPLOY_BRANCH}", url: 'https://github.com/Softinator-TechLabs/Rocket.Chat.git'
+                checkout scm
             }
         }
 
