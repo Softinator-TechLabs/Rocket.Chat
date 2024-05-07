@@ -14,7 +14,11 @@ pipeline {
                 git branch: "${DEPLOY_BRANCH}", url: 'https://github.com/Softinator-TechLabs/Rocket.Chat.git'
             }
         }
-
+	stage('Install Docker CLI') {
+    	    steps {
+                sh 'apt-get update && apt-get install -y docker.io'
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 script {
