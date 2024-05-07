@@ -5,7 +5,8 @@ pipeline {
         DOCKER_CREDENTIALS = 'dockerhub-satyam'
         DOCKER_IMAGE = 'satyamv/custom'
         DOCKER_TAG = 'latest'
-        DEPLOY_BRANCH = 'custom' // Change this to the desired branch
+        DEPLOY_BRANCH = 'custom'
+        DOCKER_HOST = 'tcp://192.168.4.78:2375' // Update 'host-ip' with your host server IP
     }
 
     stages {
@@ -41,6 +42,3 @@ pipeline {
                     sh 'docker-compose up -d --build'
                 }
             }
-        }
-    }
-}
