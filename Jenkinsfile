@@ -1,8 +1,28 @@
 pipeline {
     agent {
-        docker {
-            image 'maven:3.8.1-jdk-11'
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // Map Docker socket for Docker inside Docker
+        kubernetes {
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: docker
+                image: docker:20.10.7-dind
+                securityContext:
+                  privileged: true
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
+              - name: docker-compose
+                image: docker/compose:1.29.2
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
+              volumes:
+              - name: docker-socket
+                hostPath:
+                  path: /var/run/docker.sock
+            """
         }
     }
 
