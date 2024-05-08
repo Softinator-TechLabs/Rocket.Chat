@@ -16,7 +16,7 @@ pipeline {
             // Define a larger timeout, e.g., 20 minutes
             	    def checkoutOptions = [
                         $class: 'GitSCM',
-                        branches: [[name: '*/master']],
+                        branches: [[name: '*/custom']],
                         doGenerateSubmoduleConfigurations: false,
                         extensions: [[$class: 'CloneOption', depth: 1, timeout: 1200]],
                         userRemoteConfigs: [[url: 'https://github.com/Softinator-TechLabs/Rocket.Chat.git']]
